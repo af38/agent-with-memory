@@ -1,19 +1,44 @@
 from mem0 import Memory
 from groq import Groq
+
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 config = {
     "vector_store" : {
         "provider": "qdrant",
-        "config" : {"host": "localhost", "port": 6333},
+        "config" : {
+            "collection_name": "qdrant_v2",
+            "host": "localhost",
+            "port": 6333,
+            "embedding_model_dims": 384
+            },
     },
+    "llm": {
+        "provider": "groq",
+        "config":{
+            "model": "groq/compound",
+            "api_key": os.getenv("GROQ_API_KEY"),
+            "temperature": 0.1
+        },
+    },
+    "embedder": {                                 # ADDED: Embedding configuration
+        "provider": "huggingface",                # Local embeddings via Hugging Face
+        "config": {
+            "model": "sentence-transformers/all-MiniLM-L6-v2",  # Lightweight & fast
+            "embedding_dims": 384
+        }
+    }
 }
 
-groq_client = Groq()
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+# Initialize Mem0 with Groq
 memory = Memory.from_config(config)
+
+
 
 def chat_with_memories(message: str, user_id: str = "default_user") -> str:
 
@@ -31,7 +56,7 @@ def chat_with_memories(message: str, user_id: str = "default_user") -> str:
         {"role": "user", "content": message},
     ]
     response = groq_client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        model="groq/compound",
         messages=messages
     )
 
