@@ -3,35 +3,10 @@ from groq import Groq
 
 from dotenv import load_dotenv
 import os
+import config
 
 load_dotenv()
 
-config = {
-    "vector_store" : {
-        "provider": "qdrant",
-        "config" : {
-            "collection_name": "qdrant_v2",
-            "host": "localhost",
-            "port": 6333,
-            "embedding_model_dims": 384
-            },
-    },
-    "llm": {
-        "provider": "groq",
-        "config":{
-            "model": "groq/compound",
-            "api_key": os.getenv("GROQ_API_KEY"),
-            "temperature": 0.1
-        },
-    },
-    "embedder": {                                 # ADDED: Embedding configuration
-        "provider": "huggingface",                # Local embeddings via Hugging Face
-        "config": {
-            "model": "sentence-transformers/all-MiniLM-L6-v2",  # Lightweight & fast
-            "embedding_dims": 384
-        }
-    }
-}
 
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -63,8 +38,8 @@ def chat_with_memories(message: str, user_id: str = "default_user") -> str:
     assistant_response = response.choices[0].message.content
     # Create new memories from the conversation
     messages.append({"role": "assistant", "content": assistant_response})
-    # This is where the magic happens
-    memory.add(messages, user_id=user_id, metadata={"source": "demo"})
+
+    memory.add(messages, user_id=user_id)
 
     return assistant_response
 
